@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POD Cristiano — Workflow 2 Fases</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090a;--card:#111214;--card-hover:#16181a;--border:#1e2024;
+  --border-active:#5e6ad2;--fg:#e8e9ea;--muted:#6b7280;--accent:#5e6ad2;
+  --accent-glow:rgba(94,106,210,0.15);--green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;--blue:#78a9dc;
+  --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;min-height:100vh}
+.container{max-width:900px;margin:0 auto;padding:2rem 1.5rem}
+
+.header{text-align:center;padding:2rem 0 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.header h1{font-size:1.75rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:0.5rem}
+.header h1 span{color:var(--accent)}
+.header p{color:var(--muted);font-size:0.9rem;max-width:560px;margin:0 auto}
+.doctrinal-box{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:1rem 1.25rem;margin:1rem 0;font-size:0.85rem;color:var(--muted);text-align:left}
+.doctrinal-box strong{color:var(--fg)}
+
+.reset-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:0.5rem 0}
+.reset-bar .progress{font-size:0.75rem;color:var(--muted);font-family:var(--mono)}
+.reset-bar .progress span{color:var(--green);font-weight:600}
+.reset-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.35rem 0.75rem;border-radius:4px;font-size:0.7rem;cursor:pointer;transition:all 0.2s}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+
+.flow-diagram{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin:1rem 0}
+.flow-diagram h3{font-size:0.9rem;font-weight:600;color:var(--accent);margin-bottom:0.75rem}
+.flow-steps{display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center}
+.flow-step{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;font-size:0.75rem;text-align:center;min-width:100px}
+.flow-step .num{font-weight:700;color:var(--accent);font-size:0.8rem}
+.flow-step .label{color:var(--muted)}
+.flow-ia{background:rgba(120,169,220,0.15);border-color:var(--blue)}
+.flow-ia .label{color:var(--blue);font-weight:600}
+.flow-arrow{color:var(--muted);font-size:0.8rem}
+.flow-arrow.blue{color:var(--blue);font-weight:600}
+.flow-arrow.green{color:var(--green);font-weight:600}
+
+.step{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:0.75rem;overflow:hidden;transition:border-color 0.2s}
+.step:hover{border-color:var(--border-active)}
+.step-header{display:flex;align-items:center;gap:0.75rem;padding:0.9rem 1.25rem;cursor:pointer;user-select:none;background:var(--card);transition:background 0.2s}
+.step-header:hover{background:var(--card-hover)}
+.step-num{width:32px;height:28px;background:var(--accent);color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0}
+.step-header h2{font-size:0.95rem;font-weight:600;flex:1}
+.step-header .role{font-size:0.7rem;color:var(--muted);background:var(--bg);padding:0.2rem 0.5rem;border-radius:4px;font-family:var(--mono)}
+.step-header .toggle{color:var(--muted);font-size:1.2rem;transition:transform 0.3s}
+.step.open .toggle{transform:rotate(180deg)}
+.step-body{display:none;padding:0 1.25rem 1.25rem;border-top:1px solid var(--border)}
+.step.open .step-body{display:block}
+.step-body .description{font-size:0.85rem;color:var(--muted);margin:1rem 0;line-height:1.7}
+
+.format-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1rem;margin:0.75rem 0;font-family:var(--mono);font-size:0.78rem;color:var(--muted);line-height:1.8;white-space:pre-wrap}
+.format-block strong{color:var(--fg)}
+
+.ia-marker{display:flex;align-items:center;gap:0.5rem;background:rgba(120,169,220,0.1);border:1px solid var(--blue);border-radius:6px;padding:0.6rem 0.8rem;margin:1rem 0;font-size:0.75rem;color:var(--blue)}
+.ia-marker .dot{width:8px;height:8px;background:var(--blue);border-radius:50%;display:inline-block;flex-shrink:0}
+
+.prompt-block{background:var(--bg);border:1px solid var(--accent);border-radius:6px;padding:1rem;margin:1.25rem 0 1rem;position:relative}
+.prompt-block::before{content:"PROMPT COPIABLE";position:absolute;top:-10px;left:12px;background:var(--bg);padding:0 6px;font-size:0.65rem;color:var(--accent);font-weight:600;letter-spacing:0.05em}
+.prompt-block pre{font-family:var(--mono);font-size:0.78rem;color:var(--fg);line-height:1.8;white-space:pre-wrap;overflow-x:auto}
+
+.copy-btn{display:inline-flex;align-items:center;gap:0.4rem;background:var(--accent);color:white;border:none;padding:0.5rem 1rem;border-radius:6px;font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;cursor:pointer;transition:opacity 0.2s,transform 0.1s}
+.copy-btn:hover{opacity:0.85}
+.copy-btn:active{transform:scale(0.97)}
+.copy-btn.copied{background:var(--green)}
+.copy-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.copy-btn.secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+.step.copied{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 0 12px rgba(34,197,94,0.1)}
+.step.copied .step-num{background:var(--green)}
+.step.copied .step-header{background:rgba(34,197,94,0.04)}
+.step.copied .step-header h2{color:var(--green)}
+.step.copied .step-header h2::after{content:" ✓";font-size:0.85em}
+
+.footer{text-align:center;padding:1.5rem 0;color:var(--muted);font-size:0.75rem;border-top:1px solid var(--border);margin-top:1.5rem}
+
+.cfg-label{font-size:0.72rem;color:var(--muted);font-family:var(--mono);margin:1rem 0 0.2rem}
+.chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin:0.5rem 0}
+.book-chip{background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:0.3rem 0.7rem;border-radius:4px;font-size:0.75rem;font-family:var(--mono);cursor:pointer;transition:all 0.2s}
+.book-chip:hover,.book-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.modo-chip{background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:0.4rem 0.8rem;border-radius:4px;font-size:0.72rem;cursor:pointer;transition:all 0.2s;text-align:center;min-width:60px}
+.modo-chip:hover{border-color:var(--accent);color:var(--accent)}
+.modo-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);font-weight:600}
+
+.field,.add-history-form input{flex:1;min-width:100px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--fg);padding:0.45rem 0.6rem;font-size:0.75rem;font-family:var(--mono)}
+.field:focus,.add-history-form input:focus{outline:none;border-color:var(--accent)}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+
+.history-panel{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:8px;padding:1rem;margin:1rem 0}
+.history-panel h4{font-size:0.8rem;font-weight:600;color:var(--orange);margin-bottom:0.5rem}
+.history-list{display:flex;flex-direction:column;gap:0.4rem;max-height:200px;overflow-y:auto}
+.history-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:var(--card);border:1px solid var(--border);border-radius:6px;font-size:0.72rem}
+.history-item .serie-id{color:var(--accent);font-weight:600;min-width:70px}
+.history-item .composicion{color:var(--muted);flex:1}
+.history-item .delete-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0.2rem;opacity:0.5;transition:all 0.2s}
+.history-item .delete-btn:hover{color:var(--red);opacity:1}
+.history-empty{color:var(--muted);font-size:0.72rem;font-style:italic;padding:0.5rem}
+.add-history-form{display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap}
+.add-history-form button{background:var(--accent);color:white;border:none;padding:0.4rem 0.8rem;border-radius:4px;font-size:0.72rem;cursor:pointer;white-space:nowrap}
+
+.quick-actions{display:flex;gap:0.5rem;flex-wrap:wrap;margin:1rem 0 0}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--green);color:white;padding:0.75rem 1.25rem;border-radius:8px;font-size:0.85rem;font-weight:500;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;z-index:1000}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Estética selector */
+.estetica-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.5rem;margin:0.5rem 0}
+.estetica-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.75rem;cursor:pointer;transition:all 0.2s;text-align:center}
+.estetica-card:hover{border-color:var(--accent)}
+.estetica-card.active{border-color:var(--accent);background:var(--accent-glow)}
+.estetica-card .est-name{font-size:0.75rem;font-weight:600;color:var(--fg);margin-bottom:0.25rem}
+.estetica-card .est-desc{font-size:0.65rem;color:var(--muted);line-height:1.4}
+
+/* ADN boxes */
+.adn-section{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem;margin:0.75rem 0}
+.adn-section h4{font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem}
+.adn-list{display:flex;flex-wrap:wrap;gap:0.4rem}
+.adn-item{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:0.35rem 0.6rem;font-size:0.7rem;color:var(--muted);font-family:var(--mono)}
+
+/* Phase divider */
+.phase-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.phase-divider .phase-num{width:36px;height:36px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;flex-shrink:0}
+.phase-divider .phase-info{flex:1}
+.phase-divider .phase-info h3{font-size:0.95rem;font-weight:600}
+.phase-divider .phase-info p{font-size:0.75rem;color:var(--muted)}
+
+@media(max-width:600px){
+  .container{padding:1rem}
+  .header h1{font-size:1.3rem}
+  .step-header{flex-wrap:wrap}
+  .step-header .role{margin-left:2.5rem}
+  .add-history-form{flex-direction:column}
+  .cfg-grid{grid-template-columns:1fr}
+  .estetica-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>POD Cristiano — <span>Workflow 2 Fases</span></h1>
+    <p>Fase 1: Análisis bíblico + 18 frases. Fase 2: Contact sheet de 18 direcciones + QA + selección. Sin saturación.</p>
+    <div class="doctrinal-box">
+      <strong>Marco doctrinal:</strong> Dios Padre, Dios Hijo Jesucristo y Dios Espíritu Santo. Enfoque cristocéntrico y trinitario: Cristo es el centro de revelación, sin negar, reducir ni omitir la divinidad, autoridad y obra del Padre y del Espíritu Santo.<br>
+      <strong>Regla fija:</strong> cada arte exalta y da gloria al único Señor de señores y Rey de reyes, y cumple la Gran Comisión dada por Jesucristo.
+    </div>
+  </div>
+
+  <div class="flow-diagram">
+    <h3>🔹 Flujo de Trabajo — 2 Fases</h3>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="num">0</div><div class="label">Configuración</div></div>
+      <div class="flow-arrow blue">↓ FASE 1</div>
+      <div class="flow-step flow-ia"><div class="num">IA</div><div class="label">Análisis + 18 frases</div></div>
+      <div class="flow-arrow green">→ ¿Continuar?</div>
+      <div class="flow-step flow-ia"><div class="num">IA</div><div class="label">Contact Sheet 18 dir.</div></div>
+      <div class="flow-arrow blue">↓ FASE 2</div>
+      <div class="flow-step"><div class="num">6</div><div class="label">Selección + QA</div></div>
+    </div>
+  </div>
+
+  <div class="reset-bar">
+    <div class="progress">Progreso: <span id="progressCount">0</span>/2 fases copiadas</div>
+    <button class="reset-btn" onclick="resetProgress()">↺ Reiniciar progreso</button>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div class="step open" id="stepConfig">
+    <div class="step-header" onclick="toggleStep('stepConfig')">
+      <div class="step-num">⚙</div>
+      <h2>Configuración de Serie</h2>
+      <span class="role">TÉCNICO + ESTÉTICO</span>
+      <span class="toggle">▼</span>
+    </div>
+    <div class="step-body">
+      <p class="description">Define la fuente, producto, mercado y la estética visual. El ADN TÉCNICO (vectorial) es fijo. El ADN ESTÉTICO (estilo) es seleccionable.</p>
+
+      <div class="format-block"><strong>PRODUCTO:</strong> Camiseta ( Oversized / Regular / Hoodie / Tote Bag )</div>
+      <div class="cfg-grid">
+        <div><div class="cfg-label">Producto</div><input class="field" id="prodInput" oninput="onField('producto',this.value)"></div>
+        <div><div class="cfg-label">Mercado</div><input class="field" id="mercInput" oninput="onField('mercado',this.value)"></div>
+      </div>
+      <div class="cfg-label">Idioma</div>
+      <div class="chips" id="idiomaSelector"></div>
+
+      <div class="format-block" style="border-left:3px solid var(--accent)"><strong>TIPO DE FUENTE (seleccionar UNO):</strong>
+A — LIBRO: Un libro bíblico completo → múltiples pasajes → 6 artes
+B — PASAJE: Un pasaje específico (ej: Salmo 23, Romanos 8) → múltiples ángulos → 6 artes
+C — TEMA: Un tema transversal (ej: gracia, pacto, reino) → múltiples versículos → 6 artes</div>
+      <div class="chips" id="tipoFuenteSelector"></div>
+
+      <div class="chips" id="bookSelector"></div>
+      <div id="refBox" style="display:none">
+        <div class="cfg-label" id="refLabel"></div>
+        <input class="field" id="refInput" oninput="onRef(this.value)">
+      </div>
+
+      <div class="format-block"><strong>MODO DE COMUNICACIÓN:</strong>
+A — COHERENTE: un solo concepto rector; los 6 artes forman una misma línea de mensaje.
+B — MIXTA: cada arte tiene su propio concepto según su versículo; los une la fuente.</div>
+      <div class="chips" id="modoComunicacionSelector"></div>
+
+      <!-- ADN TÉCNICO FIJO -->
+      <div class="adn-section">
+        <h4>🔧 ADN TÉCNICO (fijo — no cambiar)</h4>
+        <div class="adn-list">
+          <span class="adn-item">Vectorizable</span>
+          <span class="adn-item">Contornos cerrados</span>
+          <span class="adn-item">Masas sólidas</span>
+          <span class="adn-item">Formas controladas</span>
+          <span class="adn-item">Producción viable</span>
+          <span class="adn-item">Sin degradados fotográficos</span>
+          <span class="adn-item">Sin 3D realista</span>
+          <span class="adn-item">Sin fotografía</span>
+          <span class="adn-item">Sin render hiperrealista</span>
+          <span class="adn-item">Microdetalles limitados</span>
+        </div>
+      </div>
+
+      <!-- ADN ESTÉTICO SELECCIONABLE -->
+      <div class="cfg-label" style="margin-top:1rem">ADN ESTÉTICO (estilo — seleccionar UNO)</div>
+      <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0.5rem">Cada estilo reinterpreta el concepto con su lenguaje visual propio. La geometría NO es universal: Ukiyo-e no es angular, Art Nouveau es orgánico.</p>
+      <div class="estetica-grid" id="esteticaSelector"></div>
+
+      <!-- VARIABLES VISUALES -->
+      <div class="adn-section">
+        <h4>🎨 VARIABLES VISUALES (modo 18 direcciones)</h4>
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem">Estas variables se aplican a las 18 direcciones del contact sheet. Cada dirección debe resolver el concepto mediante una arquitectura gráfica diferente.</p>
+        <div class="adn-list">
+          <span class="adn-item">Geometría: angular / orgánica / modular / radial / fluida / arquitectónica / fracturada</span>
+          <span class="adn-item">Textura: impresión / grabado / halftone / tinta / papel / distress / limpia</span>
+          <span class="adn-item">Tipografía: estructural (no añadido)</span>
+          <span class="adn-item">Composición: derivada de fuerzas visuales</span>
+          <span class="adn-item">Paleta: según estilo</span>
+          <span class="adn-item">Ritmo / Densidad / Espacio negativo</span>
+        </div>
+      </div>
+
+      <div class="format-block" id="modosBlock"></div>
+
+      <div class="history-panel">
+        <h4>⚠️ Historial de Repetición Global</h4>
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem">Registra composiciones de series anteriores para que la IA no repita patrones visuales ni arquitecturas gráficas.</p>
+        <div class="history-list" id="historyList"></div>
+        <div class="add-history-form">
+          <input type="text" id="historySerie" placeholder="Serie (ej: Serie 01)">
+          <input type="text" id="historyComposicion" placeholder="Composición (ej: Monumental Icon + centered typography)">
+          <button onclick="addHistory()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="ia-marker">
+        <span class="dot"></span>
+        <strong>ADN ESTÉTICO + TÉCNICO:</strong> la arquitectura debe ser vectorizable desde el inicio. MISMO ADN ≠ MISMA IMAGEN.
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 1: ANÁLISIS + FRASEADO -->
+  <div class="phase-divider">
+    <div class="phase-num">1</div>
+    <div class="phase-info">
+      <h3>Fase 1 — Análisis Bíblico + Fraseado (18 opciones)</h3>
+      <p>La IA entrega: análisis, 18 frases (6 modos × 3), texto secundario, objetos. Luego pregunta si quieres continuar con el Contact Sheet.</p>
+    </div>
+  </div>
+
+  <div class="step" id="step1">
+    <div class="step-header" onclick="toggleStep('step1')">
+      <div class="step-num">1</div>
+      <h2>Fase 1 — Análisis + 18 Frases</h2>
+      <span class="role">TEÓLOGO + FRASEADOR</span>
+      <span class="toggle">▼</span>
+    </div>
+    <div class="step-body">
+      <p class="description">La IA ejecuta análisis bíblico + fraseado de 18 opciones (6 modos × 3). Incluye texto secundario, objetos principales/secundarios, y la arquitectura vectorial de cada opción. Al final, la IA pregunta si quieres continuar con el Contact Sheet.</p>
+
+      <div class="ia-marker">
+        <span class="dot"></span>
+        <strong>REGLA DE ORO:</strong> La IA NO debe generar el Contact Sheet en esta fase. Entrega análisis + frases, luego pregunta: "¿Quieres que continúe con el Contact Sheet de las 18 direcciones?"
+      </div>
+
+      <div class="prompt-block"><pre id="prompt1Text"></pre></div>
+
+      <div class="quick-actions">
+        <button class="copy-btn" onclick="copyText('prompt1Text', this, 'step1')">📋 Copiar Fase 1</button>
+        <button class="copy-btn secondary" onclick="downloadPrompt(1)">💾 Descargar Fase 1 (.txt)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 2: CONTACT SHEET -->
+  <div class="phase-divider">
+    <div class="phase-num">2</div>
+    <div class="phase-info">
+      <h3>Fase 2 — Contact Sheet: 18 Direcciones + QA + Selección</h3>
+      <p>La IA genera el contact sheet en cuadrícula 6×3 con las 18 direcciones diferenciadas, QA integrado, y selección recomendada de 6 artes (una por modo).</p>
+    </div>
+  </div>
+
+  <div class="step" id="step2">
+    <div class="step-header" onclick="toggleStep('step2')">
+      <div class="step-num">2</div>
+      <h2>Fase 2 — Contact Sheet 18 Direcciones</h2>
+      <span class="role">DIRECTOR DE ARTE + QA</span>
+      <span class="toggle">▼</span>
+    </div>
+    <div class="step-body">
+      <p class="description">La IA genera el Contact Sheet de 18 direcciones diferenciadas (una por modo × 3 opciones). Cada dirección es una solución compositiva distinta, no una variación cromática. Incluye QA y selección final.</p>
+
+      <div class="ia-marker">
+        <span class="dot"></span>
+        <strong>18 DIRECCIONES:</strong> 01 Monumental Icon · 02 Broken Emblem · 03 Asymmetric Crest · 04 Type Integrated · 05 Type Interlock · 06 Vertical Type · 07 Razor Geometry · 08 Constructed Grid · 09 Fragmented Geometry · 10 Flow Vector · 11 Anatomical Wrap · 12 Explosive Motion · 13 Technical Blueprint · 14 Industrial Interface · 15 Coded Symbol · 16 Raw Print · 17 Layered Distress · 18 Urban Collision
+      </div>
+
+      <div class="ia-marker">
+        <span class="dot"></span>
+        <strong>REGLA CONTACT SHEET:</strong> Cuadrícula 6×3. Cada miniatura suficientemente grande para identificar arquitectura, símbolo, tipografía, composición, textura. IDs 01-18. Diferencia estructural, NO cromática.
+      </div>
+
+      <div class="prompt-block"><pre id="prompt2Text"></pre></div>
+
+      <div class="quick-actions">
+        <button class="copy-btn" onclick="copyText('prompt2Text', this, 'step2')">📋 Copiar Fase 2</button>
+        <button class="copy-btn secondary" onclick="downloadPrompt(2)">💾 Descargar Fase 2 (.txt)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">POD Cristiano Workflow v4.0 — 2 Fases • Fase 1: Análisis + 18 frases → Fase 2: Contact Sheet 18 direcciones + QA → Selección 6 → IA Generadora</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const libros = [
+  'Génesis','Éxodo','Levítico','Números','Deuteronomio',
+  'Josué','Jueces','Rut','1 Samuel','2 Samuel','1 Reyes','2 Reyes',
+  '1 Crónicas','2 Crónicas','Esdras','Nehemías','Ester','Job',
+  'Salmos','Proverbios','Eclesiastés','Cantares',
+  'Isaías','Jeremías','Lamentaciones','Ezequiel','Daniel',
+  'Oseas','Joel','Amós','Abdías','Jonás','Miqueas','Nahúm','Habacuc','Sofonías','Hageo','Zacarías','Malaquías',
+  'Mateo','Marcos','Lucas','Juan','Hechos',
+  'Romanos','1 Corintios','2 Corintios','Gálatas','Efesios','Filipenses','Colosenses',
+  '1 Tesalonicenses','2 Tesalonicenses','1 Timoteo','2 Timoteo','Tito','Filemón',
+  'Hebreos','Santiago','1 Pedro','2 Pedro','1 Juan','2 Juan','3 Juan','Judas','Apocalipsis'
+];
+const tiposFuente = [
+  {id:'libro',label:'A — LIBRO'},{id:'pasaje',label:'B — PASAJE'},{id:'tema',label:'C — TEMA'}
+];
+const modosComunicacion = [
+  {id:'coherente',label:'A — COHERENTE'},{id:'mixta',label:'B — MIXTA'}
+];
+const idiomas = ['Español','English','Español + English'];
+
+const esteticas = [
+  {id:'streetwear',name:'Streetwear',desc:'Alto impacto, agresiva, contemporánea, gráfica. Geometría angular.'},
+  {id:'artdeco',name:'Art Déco',desc:'Geométrica, ornamental, elegante, estructurada.'},
+  {id:'brutalismo',name:'Brutalismo',desc:'Cruda, monumental, asimétrica, arquitectónica.'},
+  {id:'ukiyoe',name:'Ukiyo-e',desc:'Composición plana, contornos definidos, formas orgánicas. Geometría NO angular.'},
+  {id:'cyberpunk',name:'Cyberpunk',desc:'Tecnológica, fragmentada, industrial, dinámica.'},
+  {id:'manuscrito',name:'Manuscrito Iluminado',desc:'Medieval, ornamental, simbólica, heráldica.'},
+  {id:'psicodelico',name:'Psicodélico',desc:'Orgánica, fluida, expansiva, altamente gráfica.'},
+  {id:'artnouveau',name:'Art Nouveau',desc:'Orgánica, floral, curvas fluidas. Geometría orgánica, NO angular.'}
+];
+
+const modosVisuales = [
+  {n:1,label:'SOLO TEXTO',desc:'La palabra es el diseño. Sin objetos ni ilustraciones.'},
+  {n:2,label:'TEXTO DOMINANTE',desc:'El texto tiene el mayor peso visual. La imagen lo refuerza.'},
+  {n:3,label:'BALANCEADO',desc:'Texto e imagen tienen peso equivalente.'},
+  {n:4,label:'BALANCEADO',desc:'Texto e imagen tienen peso equivalente (diseño distinto al 3).'},
+  {n:5,label:'OBJETO DOMINANTE',desc:'La imagen cuenta la historia. El texto funciona como firma doctrinal.'},
+  {n:6,label:'SOLO OBJETO',desc:'El elemento visual comunica el concepto sin depender del texto.'}
+];
+
+const direcciones = [
+  {id:1,name:'Monumental Icon',desc:'Icono central dominante, escala masiva'},
+  {id:2,name:'Broken Emblem',desc:'Emblema fragmentado, cortes visuales'},
+  {id:3,name:'Asymmetric Crest',desc:'Escudo asimétrico, tensión dinámica'},
+  {id:4,name:'Type Integrated',desc:'Tipografía integrada al objeto'},
+  {id:5,name:'Type Interlock',desc:'Tipografía entrelazada con el gráfico'},
+  {id:6,name:'Vertical Type',desc:'Tipografía vertical, bloque estructural'},
+  {id:7,name:'Razor Geometry',desc:'Geometría cortante, líneas precisas'},
+  {id:8,name:'Constructed Grid',desc:'Rejilla construida, módulos alineados'},
+  {id:9,name:'Fragmented Geometry',desc:'Geometría fragmentada, piezas sueltas'},
+  {id:10,name:'Flow Vector',desc:'Flujo vectorial, curvas dinámicas'},
+  {id:11,name:'Anatomical Wrap',desc:'Envoltura anatómica, texto que abraza'},
+  {id:12,name:'Explosive Motion',desc:'Movimiento explosivo, energía centrífuga'},
+  {id:13,name:'Technical Blueprint',desc:'Plano técnico, estilo blueprint'},
+  {id:14,name:'Industrial Interface',desc:'Interfaz industrial, elementos UI'},
+  {id:15,name:'Coded Symbol',desc:'Símbolo codificado, tipografía técnica'},
+  {id:16,name:'Raw Print',desc:'Impresión cruda, textura directa'},
+  {id:17,name:'Layered Distress',desc:'Capas con desgaste, distress'},
+  {id:18,name:'Urban Collision',desc:'Colisión urbana, elementos superuestos'}
+];
+
+let S = {
+  libro:'Job', tipoFuente:'libro', modoComunicacion:'coherente', referencia:'',
+  producto:'Camiseta', mercado:'Hispano (ES) / Hispano (EN)', idioma:'Español + English',
+  estetica:'streetwear', historial:[]
+};
+let copiedSteps = new Set();
+
+function loadState(){
+  try{
+    const saved = localStorage.getItem('pod_workflow_state_v5');
+    if(saved) S = Object.assign(S, JSON.parse(saved));
+  }catch(e){}
+}
+function saveState(){ try{ localStorage.setItem('pod_workflow_state_v5', JSON.stringify(S)); }catch(e){} }
+function esc(t){ return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function buildChips(id, items, current, cls, onPick){
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  items.forEach(it => {
+    const value = typeof it === 'string' ? it : it.id;
+    const label = typeof it === 'string' ? it : it.label;
+    const chip = document.createElement('span');
+    chip.className = cls + (value === current ? ' active' : '');
+    chip.textContent = label;
+    chip.onclick = () => { onPick(value); };
+    box.appendChild(chip);
+  });
+}
+
+function renderEsteticas(){
+  const box = document.getElementById('esteticaSelector');
+  box.innerHTML = '';
+  esteticas.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'estetica-card' + (S.estetica === e.id ? ' active' : '');
+    card.innerHTML = `<div class="est-name">${e.name}</div><div class="est-desc">${e.desc}</div>`;
+    card.onclick = () => { S.estetica = e.id; refresh(); };
+    box.appendChild(card);
+  });
+}
+
+function renderAll(){
+  buildChips('tipoFuenteSelector', tiposFuente, S.tipoFuente, 'modo-chip', v => { S.tipoFuente = v; refresh(); });
+  buildChips('modoComunicacionSelector', modosComunicacion, S.modoComunicacion, 'modo-chip', v => { S.modoComunicacion = v; refresh(); });
+  buildChips('idiomaSelector', idiomas, S.idioma, 'modo-chip', v => { S.idioma = v; refresh(); });
+  renderEsteticas();
+
+  const isLibro = S.tipoFuente === 'libro';
+  const bookBox = document.getElementById('bookSelector');
+  bookBox.style.display = isLibro ? 'flex' : 'none';
+  if(isLibro) buildChips('bookSelector', libros, S.libro, 'book-chip', v => { S.libro = v; refresh(); });
+  document.getElementById('refBox').style.display = isLibro ? 'none' : 'block';
+  if(!isLibro){
+    document.getElementById('refLabel').textContent = S.tipoFuente === 'pasaje'
+      ? 'Pasaje (ej: Salmo 23, Romanos 8)' : 'Tema (ej: gracia, pacto, reino)';
+    const inp = document.getElementById('refInput');
+    inp.placeholder = S.tipoFuente === 'pasaje' ? 'Salmo 23' : 'gracia';
+    if(document.activeElement !== inp) inp.value = S.referencia;
+  }
+  document.getElementById('prodInput').value = S.producto;
+  document.getElementById('mercInput').value = S.mercado;
+  renderHistory();
+  updatePrompts();
+}
+function refresh(){ saveState(); renderAll(); }
+function onRef(v){ S.referencia = v; saveState(); updatePrompts(); }
+function onField(k,v){ S[k] = v; saveState(); updatePrompts(); }
+
+function renderModosBlock(){
+  document.getElementById('modosBlock').innerHTML =
+    '<strong>6 ARTES = 6 MODOS VISUALES (fijos, uno por arte):</strong>\n' +
+    modosVisuales.map(m => `${m.n}. ${m.label} — ${m.desc}`).join('\n') +
+    '\n\nPor cada modo/versículo: 3 opciones = 18 artes posibles, todas distintas (layout, forma del texto, textos y objetos).' +
+    '\nFrases parafraseadas (originales). Texto principal + secundario y objeto principal + secundarios: amplifican sin pisarse, sin microtextos decorativos.' +
+    '\nTodo es uno junto y también funciona por separado.';
+}
+
+/* Historial */
+function addHistory(){
+  const serie = document.getElementById('historySerie').value.trim();
+  const composicion = document.getElementById('historyComposicion').value.trim();
+  if(!serie || !composicion) return;
+  S.historial.push({serie, composicion, fecha:new Date().toLocaleDateString()});
+  document.getElementById('historySerie').value = '';
+  document.getElementById('historyComposicion').value = '';
+  refresh();
+}
+function removeHistory(i){ S.historial.splice(i,1); refresh(); }
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  if(!S.historial.length){ list.innerHTML = '<div class="history-empty">No hay series registradas.</div>'; return; }
+  list.innerHTML = S.historial.map((h,i) => `
+    <div class="history-item">
+      <span class="serie-id">${esc(h.serie)}</span>
+      <span class="composicion">${esc(h.composicion)}</span>
+      <button class="delete-btn" onclick="removeHistory(${i})">✕</button>
+    </div>`).join('');
+}
+function getHistorialText(){
+  if(!S.historial.length) return '';
+  return `\n\n⚠️ HISTORIAL DE REPETICIÓN GLOBAL — COMPOSICIONES ANTERIORES:\n${S.historial.map(h => `• ${h.serie}: ${h.composicion}`).join('\n')}\n\nREGLA: No repetir estas composiciones ni arquitecturas gráficas. Cada serie nueva debe diferenciarse visualmente.`;
+}
+
+function fuenteInfo(){
+  if(S.tipoFuente === 'libro') return {tag:'A — LIBRO COMPLETO', nombre:S.libro,
+    regla:'Recorrer el libro completo y elegir 6 pasajes/versículos distintos, uno por modo visual.'};
+  if(S.tipoFuente === 'pasaje') return {tag:'B — PASAJE ESPECÍFICO', nombre:S.referencia || '[ESCRIBE EL PASAJE]',
+    regla:'Analizar el pasaje completo y elegir 6 versículos o ángulos distintos dentro de él, uno por modo visual.'};
+  return {tag:'C — TEMA TRANSVERSAL', nombre:S.referencia || '[ESCRIBE EL TEMA]',
+    regla:'Elegir 6 versículos (de distintos libros) que traten el tema, uno por modo visual.\nNo mezclar versículos solo para obtener frases atractivas.'};
+}
+
+function getEsteticaInfo(){
+  const e = esteticas.find(x => x.id === S.estetica) || esteticas[0];
+  return e;
+}
+
+function getEsteticaRules(){
+  const e = getEsteticaInfo();
+  const reglas = {
+    streetwear: 'Estética streetwear de alto impacto, agresiva, contemporánea y gráfica. Geometría angular recomendada.',
+    artdeco: 'Estética Art Déco, geométrica, ornamental, elegante y estructurada. Geometría angular.',
+    brutalismo: 'Estética brutalista, cruda, monumental, asimétrica y arquitectónica. Geometría angular.',
+    ukiyoe: 'Estética Ukiyo-e: composición plana, contornos definidos, formas orgánicas. Geometría NO angular.',
+    cyberpunk: 'Estética cyberpunk, tecnológica, fragmentada, industrial y dinámica.',
+    manuscrito: 'Estética medieval de manuscrito iluminado, ornamental, simbólica y heráldica.',
+    psicodelico: 'Estética psicodélica, orgánica, fluida, expansiva y altamente gráfica.',
+    artnouveau: 'Estética Art Nouveau: orgánica, floral, curvas fluidas. Geometría orgánica, NO angular.'
+  };
+  return reglas[e.id] || reglas.streetwear;
+}
+
+function getTextoSecundarioRules(){
+  return `TEXTO SECUNDARIO (reglas estrictas):
+- Tamaño: ≤ 50% del texto primario. Nunca compite.
+- Color: contraste suave (gris claro, tono apagado). Nunca color de acento principal.
+- Ubicación estratégica (elegir UNA):
+  · Esquina opuesta al texto primario
+  · Dentro de un objeto (filo, doblez, borde)
+  · Curvado alrededor del elemento visual
+  · Integrado a la arquitectura tipográfica
+- Contenido: doctrinar real que refuerza el primario. Nunca decorativo, nunca relleno, nunca microtexto.
+- Nunca más de 1 texto secundario por arte.
+- PROHIBIDO: microtextos decorativos, texto diminuto ilegible, texto que no aporta significado.`;
+}
+
+function getTipografiaEstructuralRules(){
+  return `TIPOGRAFÍA ESTRUCTURAL (no texto añadido):
+La tipografía NO se coloca DESPUÉS de la ilustración. Es un elemento estructural de la composición.
+
+ANTES DE POSICIONAR EL TEXTO, ANALIZAR:
+1. Eje dominante de la composición
+2. Diagonales y líneas de tensión
+3. Masas visuales y su peso
+4. Espacios negativos disponibles
+5. Cortes naturales del gráfico
+6. Elementos que funcionan como primer, segundo y tercer plano
+7. Zonas donde la tipografía genera contraste sin destruir el icono principal
+
+REGLA: NO usar automáticamente el centro geométrico. El centro solo se usa si el análisis demuestra que es la solución correcta.
+
+La posición del texto deriva de: FUERZA VISUAL + ESPACIO NEGATIVO + DIRECCIÓN + PROFUNDIDAD + ANATOMÍA DEL GRÁFICO + JERARQUÍA.
+
+Seleccionar 1-3 mecanismos de posicionamiento:
+• Bleed & Crop (texto que sale del marco o se corta)
+• Envolvimiento (texto que abraza al objeto)
+• Intersección Z-Index (texto detrás/delante del objeto)
+• Perspectiva (texto en fuga o inclinado)
+• Multi-direccionalidad (texto en ángulos mixtos)
+• Texto vertical (columna o bloque vertical)
+• Bloque técnico (texto como bloque modular)
+• Desplazamiento asimétrico (texto descentrado con intención)
+
+La tipografía interactúa con la ilustración. No simplemente ocupa un espacio vacío.
+MISMO ADN ≠ MISMA POSICIÓN. Cada diseño encuentra su propia solución espacial.`;
+}
+
+function getAntiRepeticionRules(){
+  return `ANTI-REPETICIÓN (las 18 direcciones):
+Ninguna puede repetir:
+- Composición dominante
+- Posición del símbolo
+- Estructura tipográfica
+- Dirección del movimiento
+- Relación texto/imagen
+- Tratamiento de contornos
+- Distribución de masas
+- Sistema geométrico
+- Patrón de textura
+
+Puede compartir ADN visual, pero DEBE resolver el concepto mediante una arquitectura gráfica diferente.
+MISMO ADN TÉCNICO ≠ MISMA IMAGEN.`;
+}
+
+function getADNTecnicoText(){
+  return `ADN TÉCNICO FIJO (todas las 18 direcciones):
+- Construcción vectorial (ilustración gráfica, no fotográfica)
+- Contornos cerrados y limpios
+- Masas visuales claramente separadas
+- Formas sólidas y geometría definida
+- Contraste controlado
+- Detalles técnicos controlados
+- Textura compatible con impresión (camiseta)
+- Microdetalles limitados
+- PROHIBIDO: degradados fotográficos, apariencia 3D realista, fotografía, render hiperrealista
+- La arquitectura debe ser vectorizable desde el inicio`;
+}
+
+function getDireccionesText(){
+  return direcciones.map(d => `${d.id}. ${d.name} — ${d.desc}`).join('\n');
+}
+
+function generatePrompt1(){
+  const f = fuenteInfo();
+  const e = getEsteticaInfo();
+  const L = '━'.repeat(34);
+  const com = S.modoComunicacion === 'coherente'
+    ? 'A — COHERENTE: definir UN concepto rector y un mensaje global. Los 6 versículos forman una misma línea teológica y narrativa (con orden lógico). Las artes se sienten una colección.'
+    : 'B — MIXTA: cada arte tiene su propio concepto, según su versículo. Los une la fuente (libro / pasaje / tema), no un único hilo. Aun así, deben sentirse de la misma marca.';
+  const modos = modosVisuales.map(m => `${m.n}. ${m.label} — ${m.desc}`).join('\n');
+
+  return `${L}
+SERIE POD CRISTIANA — FASE 1: ANÁLISIS + FRASEADO
+${L}
+
+ROLES: TEÓLOGO TRINITARIO CRISTOCÉNTRICO + CONCEPT WRITER + FRASEADOR
+
+OBJETIVO:
+Ejecutar AHORA, en esta respuesta:
+análisis bíblico → 18 frases parafraseadas (6 modos × 3 opciones) → dirección de arte compacta de cada una.
+
+⛔ NO generes Contact Sheet en esta fase. NO pidas confirmación antes de entregar el análisis.
+Empieza directamente por la FASE 1 y entrega todo el análisis + frases.
+Al FINAL, pregunta: "¿Quieres que continúe con el Contact Sheet de las 18 direcciones?"
+
+${L}
+CONFIGURACIÓN
+${L}
+
+Fuente: ${f.tag} → ${f.nombre}
+Comunicación: ${com}
+Producto: ${S.producto || '[definir]'}
+Mercado: ${S.mercado || '[definir]'}
+Idioma: ${S.idioma}
+Estética (ADN ESTÉTICO): ${e.name} — ${e.desc}
+Cantidad: 6 MODOS × 3 OPCIONES = 18 ARTES POSIBLES (luego se eligen 6, uno por modo)
+
+${f.regla}
+
+${L}
+ADN TÉCNICO FIJO (todas las 18 opciones)
+${L}
+${getADNTecnicoText()}
+
+${L}
+ADN ESTÉTICO SELECCIONADO
+${L}
+${getEsteticaRules()}
+
+${getTipografiaEstructuralRules()}
+
+${getTextoSecundarioRules()}
+
+${getAntiRepeticionRules()}
+
+${L}
+REGLAS SIEMPRE (innegociables)
+${L}
+
+1. Cada arte exalta y da gloria al único Señor de señores y Rey de reyes, Jesucristo (Ap 19:16; 1 Ti 6:15), sin negar ni reducir al Padre ni al Espíritu Santo.
+2. Cada arte cumple la Gran Comisión (Mt 28:19-20): comunica un mensaje que evangeliza, llama a la fe/arrepentimiento o discipula. Indicar CÓMO en cada arte.
+3. FIDELIDAD BÍBLICA: cada frase debe respetar el sentido real del versículo citado. No inventar contenido ni atribuir a un versículo lo que no dice. Si no puedes verificar un versículo, indicarlo.
+4. PARÁFRASIS ORIGINAL (propiedad intelectual): ninguna frase del arte es cita literal de una traducción con derechos (RVR60, NVI, etc.). Cada frase es una paráfrasis original, en palabras nuevas y con el mismo sentido. Tampoco copiar ni imitar eslóganes, marcas, letras de canciones, títulos de obras ni frases populares de merch cristiano. Se conserva la referencia bíblica.
+5. Enfoque trinitario y cristocéntrico. Evitar modalismo, arrianismo, unitarismo, triteísmo. No asignar colores automáticamente a personas de la Trinidad.
+6. TEXTO PRINCIPAL + SECUNDARIO: cada arte con texto lleva un texto principal (3-7 palabras) y un texto secundario (≤50% tamaño, contraste suave, ubicación estratégica, contenido doctrinal real). El secundario amplifica sin competir.
+7. OBJETO PRINCIPAL + OBJETOS SECUNDARIOS: cada arte con imagen lleva un objeto principal y 1-2 objetos secundarios que amplifican el mismo concepto bíblico. Cada uno con su propio espacio y escala.
+8. TODO REFUERZA Y TODO ES UNO: cada elemento tiene una función que refuerza el concepto. Juntos cumplen el propósito. Por separado, cada elemento también funciona. Si un elemento no aporta, se elimina.
+9. DISEÑO PARA CAMISETA: pensar en el producto físico. Zona segura de impresión, legibilidad a distancia, escalabilidad. No artes de pantalla.
+
+${L}
+6 MODOS VISUALES (cada modo tiene 3 opciones)
+${L}
+
+${modos}
+
+Los modos 3 y 4 son ambos BALANCEADOS pero deben ser diseños distintos (ej: 3 = texto y objeto separados lado a lado; 4 = texto integrado al objeto, en diagonal, curvo o vertical).
+
+DIFERENCIACIÓN TOTAL:
+Las 18 artes deben ser diferentes entre sí. Las 3 opciones de cada modo se distinguen entre ellas y de las otras 15 en: layout, forma del texto (arquitectura, tipografía, orientación o curvatura), texto secundario, objeto principal y objetos secundarios. Las 3 opciones de un mismo modo no comparten paleta dominante. Ninguna se parece a otra.
+
+${L}
+EJECUCIÓN (todo en esta respuesta)
+${L}
+
+FASE 1 — ANÁLISIS BÍBLICO
+Contexto y conceptos clave de la fuente. Asignar 1 versículo por modo (6 en total) con su referencia y su sentido resumido en tus palabras.
+
+FASE 2 — FRASEADO (18 frases)
+3 candidatas por modo/versículo. Cada candidata: TEXTO PRINCIPAL (3-7 palabras) + TEXTO SECUNDARIO (≤50% tamaño, contenido doctrinal), en ES y EN, ambos como paráfrasis original. Pensada para el peso visual de SU modo.
+— SOLO TEXTO: el secundario es tipográfico y forma parte de la arquitectura del texto.
+— SOLO OBJETO: sin texto dependiente; a lo sumo la referencia bíblica integrada al diseño.
+
+FASE 3 — DIRECCIÓN DE ARTE COMPACTA DE LAS 18 (IDs A1-A3, B1-B3 ... F1-F3)
+Por cada arte, entregar ficha compacta:
+— Modo y versículo (referencia)
+— Texto principal ES / EN: layout, tipografía (familia y peso), escala
+— Texto secundario ES / EN: qué idea amplifica, dónde se integra, tamaño relativo
+— Objeto principal y la verdad bíblica que carga (ninguno en SOLO TEXTO)
+— Objetos secundarios: qué amplifica cada uno y su zona propia
+— Composición: mecanismo de posicionamiento tipográfico usado (Bleed & Crop, Envolvimiento, etc.)
+— Paleta con HEX (fondo / principal / acento)
+— Cómo exalta al Rey de reyes y cómo cumple la Gran Comisión (1 línea)
+
+${L}
+SALIDA FINAL FASE 1 (en este orden)
+${L}
+
+1. Nombre de serie, concepto rector y mensaje global
+2. Análisis bíblico (contexto + 6 versículos asignados)
+3. Las 18 frases (con texto principal + secundario, ES y EN)
+4. Las 18 fichas de arte compactas (dirección de arte por cada opción)
+
+${getHistorialText()}
+
+▶ EJECUTA AHORA. Entrega el análisis completo + las 18 frases + las 18 fichas de arte.
+
+AL FINAL DE LA RESPUESTA, pregunta EXACTAMENTE así:
+"¿Quieres que continúe con el Contact Sheet de las 18 direcciones (Fase 2)?"
+NO hagas otra cosa después de esta pregunta. Espera la respuesta del usuario.`;
+}
+
+function generatePrompt2(){
+  const f = fuenteInfo();
+  const e = getEsteticaInfo();
+  const L = '━'.repeat(34);
+  const modos = modosVisuales.map(m => `${m.n}. ${m.label} — ${m.desc}`).join('\n');
+  const direccionesText = getDireccionesText();
+
+  return `${L}
+SERIE POD CRISTIANA — FASE 2: CONTACT SHEET + QA + SELECCIÓN
+${L}
+
+ROLES: DIRECTOR DE ARTE + QA POD
+
+OBJETIVO:
+Generar el Contact Sheet de las 18 direcciones (6 modos × 3 opciones = 18 artes posibles) usando las 18 direcciones base. Entregar QA integrado y selección recomendada de 6 artes (una por modo).
+
+CONTENIDO DE ENTRADA (lo que el usuario ya tiene de la Fase 1):
+- 18 frases con texto principal + secundario (ES / EN)
+- 18 fichas de arte compactas
+- Análisis bíblico con 6 versículos asignados
+
+${L}
+CONFIGURACIÓN
+${L}
+
+Fuente: ${f.tag} → ${f.nombre}
+Producto: ${S.producto || '[definir]'}
+Mercado: ${S.mercado || '[definir]'}
+Idioma: ${S.idioma}
+Estética (ADN ESTÉTICO): ${e.name} — ${e.desc}
+Cantidad: 18 DIRECCIONES (luego se eligen 6, uno por modo)
+
+${L}
+ADN TÉCNICO FIJO
+${L}
+${getADNTecnicoText()}
+
+${L}
+ADN ESTÉTICO SELECCIONADO
+${L}
+${getEsteticaRules()}
+
+${getTipografiaEstructuralRules()}
+
+${getTextoSecundarioRules()}
+
+${getAntiRepeticionRules()}
+
+${L}
+18 DIRECCIONES BASE (contact sheet)
+${L}
+
+${direccionesText}
+
+Cada dirección es una solución compositiva distinta. NO son variaciones de una misma imagen. La diferencia es estructural (arquitectura, posición del símbolo, estructura tipográfica, distribución de masas), no solo cromática.
+
+${L}
+6 MODOS VISUALES
+${L}
+
+${modos}
+
+Los modos 3 y 4 son ambos BALANCEADOS pero deben ser diseños distintos.
+
+${L}
+EJECUCIÓN
+${L}
+
+FASE 1 — CONTACT SHEET DE LAS 18 DIRECCIONES
+Para cada uno de los 6 modos, generar 3 opciones usando las 18 direcciones base:
+
+Modo 1 (SOLO TEXTO): usar direcciones 01-03 adaptadas a solo texto
+Modo 2 (TEXTO DOMINANTE): usar direcciones 04-06 con texto dominante
+Modo 3 (BALANCEADO): usar direcciones 07-09 con balance texto/imagen
+Modo 4 (BALANCEADO distinto): usar direcciones 10-12 con balance alternativo
+Modo 5 (OBJETO DOMINANTE): usar direcciones 13-15 con objeto dominante
+Modo 6 (SOLO OBJETO): usar direcciones 16-18 con solo objeto
+
+Por cada dirección (18 en total), entregar ficha completa:
+— ID de dirección (01-18) y nombre
+— Modo y versículo asignado
+— Texto principal ES / EN: layout, tipografía (familia y peso), escala
+— Texto secundario ES / EN: qué idea amplifica, dónde se integra, tamaño relativo, por qué no compite
+— Objeto principal y la verdad bíblica que carga (ninguno en SOLO TEXTO)
+— Objetos secundarios: qué amplifica cada uno y su zona propia
+— Composición: mecanismo de posicionamiento tipográfico (Bleed & Crop, Envolvimiento, Intersección Z-Index, Perspectiva, Multi-direccionalidad, Texto vertical, Bloque técnico, Desplazamiento asimétrico)
+— Paleta con HEX (fondo / principal / acento)
+— Tratamiento gráfico según el ADN ESTÉTICO seleccionado
+— Función de cada elemento y cómo se sostiene solo
+— Cómo exalta al Rey de reyes y cómo cumple la Gran Comisión (1 línea)
+
+Cuadrícula del contact sheet: 6 filas (modos) × 3 columnas (opciones). IDs visibles 01-18.
+Cada miniatura suficientemente grande para identificar: arquitectura, símbolo, tipografía, composición, textura.
+
+FASE 2 — QA INTEGRADO (corregir antes de entregar)
+— QA TEOLÓGICA: cada frase respeta su versículo; trinitario; símbolos sin ambigüedad.
+— QA ORIGINALIDAD: ninguna frase es cita literal ni copia eslóganes, marcas o letras de canciones.
+— QA GRAN COMISIÓN / EXALTACIÓN: ✓ o ✗ por arte.
+— QA ANTI-REPETICIÓN: matriz de las 18 (layout / forma del texto / texto secundario / objeto principal / objetos secundarios / mecanismo tipográfico). Ninguna repite arquitectura gráfica.
+— QA REFUERZO Y UNIDAD: cada elemento funciona solo, nada se pisa, el secundario amplifica sin competir, cero microtextos decorativos.
+— QA TIPOGRAFÍA ESTRUCTURAL: el texto no está "añadido", interactúa con la ilustración, posición derivada de fuerzas visuales.
+— QA POD: legibilidad en camiseta, contraste, escalabilidad, zona segura de impresión.
+— QA ADN TÉCNICO: contornos cerrados, masas sólidas, sin degradados, sin 3D, sin fotografía.
+
+${L}
+SALIDA FINAL FASE 2 (en este orden)
+${L}
+
+1. CONTACT SHEET completo: las 18 fichas con cuadrícula 6×3
+2. Resultado del QA (pasa / corregir por dirección)
+3. SELECCIÓN RECOMENDADA: 6 artes, una por modo, con una línea de razón cada una
+4. Cierra pidiendo únicamente qué 6 artes elige el usuario (una por modo) para pasar a producción / ENGINE_6F
+
+${getHistorialText()}
+
+▶ EJECUTA AHORA. Empieza por la FASE 1 y entrega todo en esta respuesta.`;
+}
+
+function updatePrompts(){
+  document.getElementById('prompt1Text').textContent = generatePrompt1();
+  document.getElementById('prompt2Text').textContent = generatePrompt2();
+}
+
+/* UI */
+function toggleStep(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+function markStepCopied(id){
+  const el = document.getElementById(id);
+  if(el && !copiedSteps.has(id)){
+    copiedSteps.add(id);
+    el.classList.add('copied');
+    document.getElementById('progressCount').textContent = copiedSteps.size;
+    showToast('✓ Fase copiada — marcada como completada');
+  }
+}
+function resetProgress(){
+  copiedSteps.clear();
+  document.querySelectorAll('.step.copied').forEach(e => e.classList.remove('copied'));
+  document.getElementById('progressCount').textContent = '0';
+  showToast('↺ Progreso reiniciado');
+}
+function copyText(elementId, btn, stepId){
+  const text = document.getElementById(elementId).textContent;
+  const done = () => {
+    if(btn){
+      const original = btn.textContent;
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = original; }, 2000);
+    }
+    if(stepId) markStepCopied(stepId);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ showToast('No se pudo copiar'); }
+  document.body.removeChild(ta);
+}
+function downloadPrompt(phase){
+  const name = (S.tipoFuente === 'libro' ? S.libro : (S.referencia || S.tipoFuente)).replace(/[^\wÀ-ÿ]+/g,'_');
+  const blob = new Blob([phase === 1 ? generatePrompt1() : generatePrompt2()], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `POD_serie_${name}_fase${phase}.txt`; a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ Fase ${phase} descargada`);
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+loadState();
+renderModosBlock();
+renderAll();
+</script>
+</body>
+</html>
